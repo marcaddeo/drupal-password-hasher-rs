@@ -87,11 +87,11 @@ impl DrupalPasswordHasher {
     fn generate_salt(&self) -> String {
         let mut output = String::from("$S$");
         let mut rng = OsRng::new().unwrap();
-        let mut random_bytes = vec![0u8; 7];
+        let mut random_bytes = vec![0u8; 6];
         rng.fill_bytes(&mut random_bytes);
 
         output.push(Self::ALPHABET[self.count_log2]);
-        output.push_str(Self::base64_encode(&random_bytes, 7).as_str());
+        output.push_str(Self::base64_encode(&random_bytes, 6).as_str());
 
         output
     }
@@ -176,18 +176,15 @@ impl PasswordHasher for DrupalPasswordHasher {
             _ => None,
         };
 
+        // Check the hashes in constant time. This should not be optimized.
         if let Some(computed_hash) = computed_hash {
-            if hash.chars().count() != computed_hash.chars().count() {
-                return false;
-            }
+            let computed_hash_bytes = computed_hash.as_bytes();
+            let hash_bytes = hash.as_bytes();
 
-            let hash_chars: Vec<char> = hash.chars().collect();
-            let computed_hash_chars: Vec<char> = hash.chars().collect();
-            let mut result = 0;
             let mut i = 0;
-
-            while i < hash.chars().count() {
-                result = result | hash_chars[i] as u8 ^ computed_hash_chars[i] as u8;
+            let mut result = 0;
+            while i < hash_bytes.len() {
+                result = result | hash_bytes[i] ^ computed_hash_bytes[i];
                 i += 1
             }
 
@@ -211,5 +208,10 @@ mod tests {
 
         let stored_hash = "$S$E0yeIpFmXLNKlaCstd2PciVJuu48rW0fMgIEkW54sUsfVo7aREtW";
         println!("Admin: {:?}", drupal_hasher.check("admin", stored_hash));
+
+        let stored_hash = "$S$ECw0enicwqDyCttylJNJ/iA6mZD.UGU8PwwHFFgGRK/iefY9HqSi";
+        println!("asd: {:?}", drupal_hasher.check("asd", stored_hash));
+
+        println!("{:?}", drupal_hasher.hash("password"));
     }
 }
