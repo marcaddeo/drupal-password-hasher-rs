@@ -204,14 +204,12 @@ mod tests {
         let drupal_hasher = DrupalPasswordHasher::new(16);
 
         let stored_hash = "$S$ECw0enicwqDyCttylJNJ/iA6mZD.UGU8PwwHFFgGRK/iefY9HqSi";
-        println!("Password: {:?}", drupal_hasher.check("password", stored_hash));
+        assert!(drupal_hasher.check("password", stored_hash));
 
         let stored_hash = "$S$E0yeIpFmXLNKlaCstd2PciVJuu48rW0fMgIEkW54sUsfVo7aREtW";
-        println!("Admin: {:?}", drupal_hasher.check("admin", stored_hash));
+        assert!(drupal_hasher.check("admin", stored_hash));
 
-        let stored_hash = "$S$ECw0enicwqDyCttylJNJ/iA6mZD.UGU8PwwHFFgGRK/iefY9HqSi";
-        println!("asd: {:?}", drupal_hasher.check("asd", stored_hash));
-
-        println!("{:?}", drupal_hasher.hash("password"));
+        let hash = drupal_hasher.hash("password").unwrap();
+        assert!(drupal_hasher.check("password", &hash));
     }
 }
